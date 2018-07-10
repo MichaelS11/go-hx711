@@ -17,8 +17,8 @@ func HwioCloseAll() {
 	hwio.CloseAll()
 }
 
-// NewHx711 creates new Hx711
-// Make sure to set clockPinName and dataPinName to the correct pins
+// NewHx711 creates new Hx711.
+// Make sure to set clockPinName and dataPinName to the correct pins.
 // https://cdn.sparkfun.com/datasheets/Sensors/ForceFlex/hx711_english.pdf
 func NewHx711(clockPinName string, dataPinName string) (*Hx711, error) {
 	var err error
@@ -37,10 +37,10 @@ func NewHx711(clockPinName string, dataPinName string) (*Hx711, error) {
 	return hx711, nil
 }
 
-// SetGain can be set to gain of 128, 64, or 32
-// Gain of 128 or 64 is input channel A, gain of 32 is input channel B
-// Default gain is 128
-// Note change only takes affect after one reading
+// SetGain can be set to gain of 128, 64, or 32.
+// Gain of 128 or 64 is input channel A, gain of 32 is input channel B.
+// Default gain is 128.
+// Note change only takes affect after one reading.
 func (hx711 *Hx711) SetGain(gain int) {
 	switch gain {
 	case 128:
@@ -66,8 +66,8 @@ func (hx711 *Hx711) readDataBit() (int, error) {
 	return hwio.DigitalRead(hx711.dataPin)
 }
 
-// Reset starts up or resets the chip
-// The chip needs to be reset if it is not used for just about any amount of time
+// Reset starts up or resets the chip.
+// The chip needs to be reset if it is not used for just about any amount of time.
 func (hx711 *Hx711) Reset() error {
 	err := hx711.setClockLow()
 	if err != nil {
@@ -85,8 +85,8 @@ func (hx711 *Hx711) Reset() error {
 	return nil
 }
 
-// Shutdown puts the chip in powered down mode
-// The chip should be shutdown if it is not used for just about any amount of time
+// Shutdown puts the chip in powered down mode.
+// The chip should be shutdown if it is not used for just about any amount of time.
 func (hx711 *Hx711) Shutdown() error {
 	err := hx711.setClockHigh()
 	if err != nil {
@@ -117,8 +117,8 @@ func (hx711 *Hx711) waitForDataReady() error {
 	return fmt.Errorf("timeout")
 }
 
-// ReadDataRaw will get one raw reading from chip
-// Usually will need to call Reset before calling this and Shutdown after
+// ReadDataRaw will get one raw reading from chip.
+// Usually will need to call Reset before calling this and Shutdown after.
 func (hx711 *Hx711) ReadDataRaw() (int, error) {
 	err := hx711.waitForDataReady()
 	if err != nil {
@@ -166,9 +166,9 @@ func (hx711 *Hx711) ReadDataRaw() (int, error) {
 	return data, nil
 }
 
-// ReadDataMedianRaw will get median of NumReadings raw readings
-// Do not call Reset before or Shutdown after
-// Reset and Shutdown are called for you
+// ReadDataMedianRaw will get median of NumReadings raw readings.
+// Do not call Reset before or Shutdown after.
+// Reset and Shutdown are called for you.
 func (hx711 *Hx711) ReadDataMedianRaw() (int, error) {
 	var err error
 	var data int
@@ -203,10 +203,10 @@ func (hx711 *Hx711) ReadDataMedianRaw() (int, error) {
 	return datas[len(datas)/2], nil
 }
 
-// ReadDataMedian will get median of NumReadings raw readings
-// Then will adjust number with AdjustZero and AdjustScale
-// Do not call Reset before or Shutdown after
-// Reset and Shutdown are called for you
+// ReadDataMedian will get median of NumReadings raw readings.
+// Then will adjust number with AdjustZero and AdjustScale.
+// Do not call Reset before or Shutdown after.
+// Reset and Shutdown are called for you.
 func (hx711 *Hx711) ReadDataMedian() (float64, error) {
 	data, err := hx711.ReadDataMedianRaw()
 	if err != nil {
@@ -215,9 +215,9 @@ func (hx711 *Hx711) ReadDataMedian() (float64, error) {
 	return float64(data-hx711.AdjustZero) / hx711.AdjustScale, nil
 }
 
-// GetAdjustValues will help get you the adjust values to plug in later
-// Do not call Reset before or Shutdown after
-// Reset and Shutdown are called for you
+// GetAdjustValues will help get you the adjust values to plug in later.
+// Do not call Reset before or Shutdown after.
+// Reset and Shutdown are called for you.
 func (hx711 *Hx711) GetAdjustValues(weight1 float64, weight2 float64) {
 	var err error
 	var adjustZero int
