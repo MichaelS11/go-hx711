@@ -37,8 +37,7 @@ func NewHx711(clockPinName string, dataPinName string) (*Hx711, error) {
 	return hx711, nil
 }
 
-// SetGain
-// Can be set to gain of 128, 64, or 32
+// SetGain can be set to gain of 128, 64, or 32
 // Gain of 128 or 64 is input channel A, gain of 32 is input channel B
 // Default gain is 128
 // Note change only takes affect after one reading
