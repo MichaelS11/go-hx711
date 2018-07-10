@@ -8,8 +8,8 @@ import (
 	"github.com/MichaelS11/hwio"
 )
 
-// Hx711 struct to interface with the hx711 chip
-// Call NewHx711 to create a new one
+// Hx711 struct to interface with the hx711 chip.
+// Call NewHx711 to create a new one.
 type Hx711 struct {
 	clockPin     hwio.Pin
 	dataPin      hwio.Pin
