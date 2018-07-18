@@ -102,8 +102,10 @@ func (hx711 *Hx711) waitForDataReady() error {
 	}
 
 	// wait for at least a second for the chip to be ready
-	// 10000 * 100 * Microsecond = 1 second
-	for i := 0; i < 10000; i++ {
+	// 50 * 20 * millisecond = 1 second
+	// looks like chip often takes 80 to 100 milliseconds to get ready
+	// but somettimes it takes around 500 milliseconds to get ready
+	for i := 0; i < 100; i++ {
 		data, err := hx711.readDataBit()
 		if err != nil {
 			return fmt.Errorf("readDataBit error: %v", err)
@@ -111,7 +113,7 @@ func (hx711 *Hx711) waitForDataReady() error {
 		if data == hwio.LOW {
 			return nil
 		}
-		time.Sleep(100 * time.Microsecond)
+		time.Sleep(20 * time.Millisecond)
 	}
 
 	return fmt.Errorf("timeout")
@@ -172,7 +174,7 @@ func (hx711 *Hx711) ReadDataRaw() (int, error) {
 func (hx711 *Hx711) ReadDataMedianRaw() (int, error) {
 	var err error
 	var data int
-	datas := make([]int, 0, 21)
+	datas := make([]int, 0, hx711.NumReadings)
 
 	err = hx711.Reset()
 	if err != nil {
