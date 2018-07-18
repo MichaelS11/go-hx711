@@ -75,7 +75,7 @@ func main() {
 
 To get the values needed to calibrate the scale's readings will need at least one weight of known value. Having two weights is preferred. In the below program change weight1 and weight2 to the known weight values. Make sure to set it in the unit of measurement that you prefer (pounds, ounces, kg, g, etc.). To start, make sure there are no weight on the scale. Run the program. When asked, put the first weight on the scale. Then when asked, put the second weight on the scale. It will print out the AdjustZero and AdjustScale values. Those are using in the next example.
 
-Please note that temperature affects the readings. This means if you are planning on reading the weight often, should do that for about 20 minutes before calibration.
+Please note that temperature affects the readings. Also if you are planning on reading the weight often, maybe want to do that for about 20 minutes before calibration.
 
 ```go
 package main
@@ -109,6 +109,11 @@ func main() {
 }
 ```
 
+or
+
+```
+go build -v -o getAdjustValues github.com/MichaelS11/go-hx711/getAdjustValues
+```
 
 ## Simple program to get weight
 
