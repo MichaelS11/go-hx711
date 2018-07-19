@@ -22,7 +22,7 @@ func HwioCloseAll() {
 // https://cdn.sparkfun.com/datasheets/Sensors/ForceFlex/hx711_english.pdf
 func NewHx711(clockPinName string, dataPinName string) (*Hx711, error) {
 	var err error
-	hx711 := &Hx711{numEndPulses: 1, NumReadings: 21}
+	hx711 := &Hx711{numEndPulses: 1}
 
 	hx711.clockPin, err = hwio.GetPinWithMode(clockPinName, hwio.OUTPUT)
 	if err != nil {
@@ -168,20 +168,20 @@ func (hx711 *Hx711) ReadDataRaw() (int, error) {
 	return data, nil
 }
 
-// ReadDataMedianRaw will get median of NumReadings raw readings.
+// ReadDataMedianRaw will get median of numReadings raw readings.
 // Do not call Reset before or Shutdown after.
 // Reset and Shutdown are called for you.
-func (hx711 *Hx711) ReadDataMedianRaw() (int, error) {
+func (hx711 *Hx711) ReadDataMedianRaw(numReadings int) (int, error) {
 	var err error
 	var data int
-	datas := make([]int, 0, hx711.NumReadings)
+	datas := make([]int, 0, numReadings)
 
 	err = hx711.Reset()
 	if err != nil {
 		return 0, fmt.Errorf("Reset error: %v", err)
 	}
 
-	for i := 0; i < hx711.NumReadings; i++ {
+	for i := 0; i < numReadings; i++ {
 		data, err = hx711.ReadDataRaw()
 		if err != nil {
 			continue
@@ -205,16 +205,33 @@ func (hx711 *Hx711) ReadDataMedianRaw() (int, error) {
 	return datas[len(datas)/2], nil
 }
 
-// ReadDataMedian will get median of NumReadings raw readings.
+// ReadDataMedian will get median of numReadings raw readings.
 // Then will adjust number with AdjustZero and AdjustScale.
 // Do not call Reset before or Shutdown after.
 // Reset and Shutdown are called for you.
-func (hx711 *Hx711) ReadDataMedian() (float64, error) {
-	data, err := hx711.ReadDataMedianRaw()
+func (hx711 *Hx711) ReadDataMedian(numReadings int) (float64, error) {
+	data, err := hx711.ReadDataMedianRaw(numReadings)
 	if err != nil {
 		return 0, err
 	}
 	return float64(data-hx711.AdjustZero) / hx711.AdjustScale, nil
+}
+
+// ReadDataMedianThenAvg will get median of numReadings raw readings,
+// then do that numAvgs number of time, and average those.
+// Then will adjust number with AdjustZero and AdjustScale.
+// Do not call Reset before or Shutdown after.
+// Reset and Shutdown are called for you.
+func (hx711 *Hx711) ReadDataMedianThenAvg(numReadings, numAvgs int) (float64, error) {
+	var sum int
+	for i := 0; i < numAvgs; i++ {
+		data, err := hx711.ReadDataMedianRaw(numReadings)
+		if err != nil {
+			return 0, err
+		}
+		sum += data - hx711.AdjustZero
+	}
+	return (float64(sum) / float64(numAvgs)) / hx711.AdjustScale, nil
 }
 
 // GetAdjustValues will help get you the adjust values to plug in later.
@@ -229,7 +246,7 @@ func (hx711 *Hx711) GetAdjustValues(weight1 float64, weight2 float64) {
 	fmt.Println("Make sure scale is working and empty, getting weight in 5 seconds...")
 	time.Sleep(5 * time.Second)
 	fmt.Println("Getting weight...")
-	adjustZero, err = hx711.ReadDataMedianRaw()
+	adjustZero, err = hx711.ReadDataMedianRaw(11)
 	if err != nil {
 		fmt.Println("ReadDataMedianRaw error:", err)
 		return
@@ -240,7 +257,7 @@ func (hx711 *Hx711) GetAdjustValues(weight1 float64, weight2 float64) {
 	fmt.Printf("Put first weight of %.2f on scale, getting weight in 15 seconds...\n", weight1)
 	time.Sleep(15 * time.Second)
 	fmt.Println("Getting weight...")
-	scale1, err = hx711.ReadDataMedianRaw()
+	scale1, err = hx711.ReadDataMedianRaw(11)
 	if err != nil {
 		fmt.Println("ReadDataMedianRaw error:", err)
 		return
@@ -251,7 +268,7 @@ func (hx711 *Hx711) GetAdjustValues(weight1 float64, weight2 float64) {
 	fmt.Printf("Put second weight of %.2f on scale, getting weight in 15 seconds...\n", weight2)
 	time.Sleep(15 * time.Second)
 	fmt.Println("Getting weight...")
-	scale2, err = hx711.ReadDataMedianRaw()
+	scale2, err = hx711.ReadDataMedianRaw(11)
 	if err != nil {
 		fmt.Println("ReadDataMedianRaw error:", err)
 		return

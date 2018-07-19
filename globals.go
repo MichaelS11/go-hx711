@@ -14,10 +14,6 @@ type Hx711 struct {
 	clockPin     hwio.Pin
 	dataPin      hwio.Pin
 	numEndPulses int
-	// NumReadings sets the number of readings to get for median reads.
-	// Defaults to 21.
-	// Do not set below 1.
-	NumReadings int
 	// AdjustZero should be set to an int that will zero out a raw reading
 	AdjustZero int
 	// AdjustScale should be set to a float64 that will give output units wanted
