@@ -160,3 +160,15 @@ func main() {
 	}
 }
 ```
+
+## ReadDataMedianThenMovingAvgs
+
+The function ReadDataMedianThenMovingAvgs gets the number of reading you pass in, in the below example, 11 readings. Then it finds the median reading, adjusts that number with AdjustZero and AdjustScale. Then it will do a rolling average of the last readings in the weights slice up to the number of averages passed in, which in the below example is 5 averages. 
+
+```go
+weights := []float64{}
+err = hx711.ReadDataMedianThenMovingAvgs(11, 5, &weights)
+if err != nil {
+	fmt.Println("ReadDataMedianThenAvg error:", err)
+}
+```

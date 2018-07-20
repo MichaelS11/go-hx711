@@ -77,7 +77,7 @@ func (hx711 *Hx711) Reset() error {
 	if err != nil {
 		return fmt.Errorf("setClockHigh error: %v", err)
 	}
-	time.Sleep(61 * time.Microsecond)
+	time.Sleep(70 * time.Microsecond)
 	err = hx711.setClockLow()
 	if err != nil {
 		return fmt.Errorf("setClockLow error: %v", err)
@@ -205,8 +205,8 @@ func (hx711 *Hx711) ReadDataMedianRaw(numReadings int) (int, error) {
 	return datas[len(datas)/2], nil
 }
 
-// ReadDataMedian will get median of numReadings raw readings.
-// Then will adjust number with AdjustZero and AdjustScale.
+// ReadDataMedian will get median of numReadings raw readings,
+// then will adjust number with AdjustZero and AdjustScale.
 // Do not call Reset before or Shutdown after.
 // Reset and Shutdown are called for you.
 func (hx711 *Hx711) ReadDataMedian(numReadings int) (float64, error) {
@@ -219,7 +219,7 @@ func (hx711 *Hx711) ReadDataMedian(numReadings int) (float64, error) {
 
 // ReadDataMedianThenAvg will get median of numReadings raw readings,
 // then do that numAvgs number of time, and average those.
-// Then will adjust number with AdjustZero and AdjustScale.
+// then will adjust number with AdjustZero and AdjustScale.
 // Do not call Reset before or Shutdown after.
 // Reset and Shutdown are called for you.
 func (hx711 *Hx711) ReadDataMedianThenAvg(numReadings, numAvgs int) (float64, error) {
@@ -232,6 +232,29 @@ func (hx711 *Hx711) ReadDataMedianThenAvg(numReadings, numAvgs int) (float64, er
 		sum += data - hx711.AdjustZero
 	}
 	return (float64(sum) / float64(numAvgs)) / hx711.AdjustScale, nil
+}
+
+// ReadDataMedianThenMovingAvgs will get median of numReadings raw readings,
+// then will adjust number with AdjustZero and AdjustScale
+// then get the moving avgs.
+// Do not call Reset before or Shutdown after.
+// Reset and Shutdown are called for you.
+func (hx711 *Hx711) ReadDataMedianThenMovingAvgs(numReadings, numAvgs int, movingAvgs *[]float64) error {
+	data, err := hx711.ReadDataMedian(numReadings)
+	if err != nil {
+		return err
+	}
+	var result float64
+	for i := range *movingAvgs {
+		result += (*movingAvgs)[i]
+	}
+	result = (result + float64(data)) / float64(len(*movingAvgs)+1)
+	if len(*movingAvgs) < numAvgs {
+		*movingAvgs = append(*movingAvgs, result)
+		return nil
+	}
+	*movingAvgs = append((*movingAvgs)[1:], result)
+	return nil
 }
 
 // GetAdjustValues will help get you the adjust values to plug in later.
