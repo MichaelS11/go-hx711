@@ -54,6 +54,8 @@ func main() {
 		return
 	}
 
+	fmt.Printf("\nclockPinName: %v - dataPinName: %v - weight1: %f, weight2: %f\n\n", clockPinName, dataPinName, weight1, weight2)
+
 	hx711.GetAdjustValues(weight1, weight2)
 }
 
