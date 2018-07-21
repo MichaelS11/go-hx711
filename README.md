@@ -150,9 +150,9 @@ func main() {
 	for i := 0; i < 10000; i++ {
 		time.Sleep(200 * time.Microsecond)
 
-		data, err = hx711.ReadDataMedianThenAvg(5, 5)
+		data, err = hx711.ReadDataMedian(11)
 		if err != nil {
-			fmt.Println("ReadDataMedianThenAvg error:", err)
+			fmt.Println("ReadDataMedian error:", err)
 			continue
 		}
 
