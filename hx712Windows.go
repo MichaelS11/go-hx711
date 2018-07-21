@@ -84,6 +84,11 @@ func (hx711 *Hx711) ReadDataMedianThenAvg(numReadings, numAvgs int) (float64, er
 // Do not call Reset before or Shutdown after.
 // Reset and Shutdown are called for you.
 func (hx711 *Hx711) ReadDataMedianThenMovingAvgs(numReadings, numAvgs int, movingAvgs *[]float64) error {
+	if len(*movingAvgs) < numAvgs {
+		*movingAvgs = append(*movingAvgs, 0)
+		return nil
+	}
+	*movingAvgs = append((*movingAvgs)[1:], 0)
 	return nil
 }
 
