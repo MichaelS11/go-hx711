@@ -54,6 +54,11 @@ func (hx711 *Hx711) ReadDataRaw() (int, error) {
 	return 0, nil
 }
 
+// readDataMedianRaw will get median of numReadings raw readings.
+func (hx711 *Hx711) readDataMedianRaw(numReadings int, stop *bool) (int, error) {
+	return 0, nil
+}
+
 // ReadDataMedianRaw will get median of numReadings raw readings.
 // Do not call Reset before or Shutdown after.
 // Reset and Shutdown are called for you.
@@ -90,6 +95,22 @@ func (hx711 *Hx711) ReadDataMedianThenMovingAvgs(numReadings, numAvgs int, movin
 	}
 	*movingAvgs = append((*movingAvgs)[1:], 0)
 	return nil
+}
+
+// BackgroundReadMovingAvgs it means to run in the background, run as a Goroutine.
+// Will continue to get readings and update movingAvgs untill stop is set to true.
+// Once stopped, will close chan stopped.
+// Do not call Reset before or Shutdown after.
+// Reset and Shutdown are called for you.
+func (hx711 *Hx711) BackgroundReadMovingAvgs(numReadings, numAvgs int, movingAvgs *[]float64, stop *bool, stopped chan struct{}) {
+	for !*stop {
+		if len(*movingAvgs) < numAvgs {
+			*movingAvgs = append(*movingAvgs, 0)
+			continue
+		}
+		*movingAvgs = append((*movingAvgs)[1:], 0)
+	}
+	close(stopped)
 }
 
 // GetAdjustValues will help get you the adjust values to plug in later.

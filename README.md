@@ -171,4 +171,34 @@ err = hx711.ReadDataMedianThenMovingAvgs(11, 5, &weights)
 if err != nil {
 	fmt.Println("ReadDataMedianThenAvg error:", err)
 }
+
+// get data
+fmt.Println(weights[len(weights)-1])
+```
+
+## BackgroundReadMovingAvgs
+
+The function BackgroundReadMovingAvgs is basically the same as ReadDataMedianThenMovingAvgs but runs in the background in a Goroutine. Set stop to true for BackgroundReadMovingAvgs to quit
+
+```go
+weights := []float64{}
+stop := false
+stopped = make(chan struct{}, 1)
+go hx711.BackgroundReadMovingAvgs(11, 5, &weights, &stop, stopped)
+
+// wait for data
+time.sleep(time.Second)
+
+if len(weights) < 1 {
+	fmt.Println("weights has no data")
+}
+
+// get data
+fmt.Println(weights[len(weights)-1]) 
+
+// when done set stop to true to quit BackgroundReadMovingAvgs
+stop = true
+
+// wait for BackgroundReadMovingAvgs to stop
+<-stopped
 ```

@@ -4,6 +4,7 @@ package hx711
 
 import (
 	"fmt"
+	"log"
 	"sort"
 	"time"
 
@@ -168,20 +169,17 @@ func (hx711 *Hx711) ReadDataRaw() (int, error) {
 	return data, nil
 }
 
-// ReadDataMedianRaw will get median of numReadings raw readings.
-// Do not call Reset before or Shutdown after.
-// Reset and Shutdown are called for you.
-func (hx711 *Hx711) ReadDataMedianRaw(numReadings int) (int, error) {
+// readDataMedianRaw will get median of numReadings raw readings.
+func (hx711 *Hx711) readDataMedianRaw(numReadings int, stop *bool) (int, error) {
 	var err error
 	var data int
 	datas := make([]int, 0, numReadings)
 
-	err = hx711.Reset()
-	if err != nil {
-		return 0, fmt.Errorf("Reset error: %v", err)
-	}
-
 	for i := 0; i < numReadings; i++ {
+		if *stop {
+			return 0, fmt.Errorf("stopped")
+		}
+
 		data, err = hx711.ReadDataRaw()
 		if err != nil {
 			continue
@@ -189,12 +187,9 @@ func (hx711 *Hx711) ReadDataMedianRaw(numReadings int) (int, error) {
 		// reading of -1 seems to be some kind of error
 		if data == -1 {
 			continue
-
 		}
 		datas = append(datas, data)
 	}
-
-	hx711.Shutdown()
 
 	if len(datas) < 1 {
 		return 0, fmt.Errorf("no data, last err: %v", err)
@@ -203,6 +198,25 @@ func (hx711 *Hx711) ReadDataMedianRaw(numReadings int) (int, error) {
 	sort.Ints(datas)
 
 	return datas[len(datas)/2], nil
+}
+
+// ReadDataMedianRaw will get median of numReadings raw readings.
+// Do not call Reset before or Shutdown after.
+// Reset and Shutdown are called for you.
+func (hx711 *Hx711) ReadDataMedianRaw(numReadings int) (int, error) {
+	var data int
+
+	err := hx711.Reset()
+	if err != nil {
+		return 0, fmt.Errorf("Reset error: %v", err)
+	}
+
+	stop := false
+	data, err = hx711.readDataMedianRaw(numReadings, &stop)
+
+	hx711.Shutdown()
+
+	return data, err
 }
 
 // ReadDataMedian will get median of numReadings raw readings,
@@ -255,6 +269,50 @@ func (hx711 *Hx711) ReadDataMedianThenMovingAvgs(numReadings, numAvgs int, movin
 	}
 	*movingAvgs = append((*movingAvgs)[1:], result)
 	return nil
+}
+
+// BackgroundReadMovingAvgs it means to run in the background, run as a Goroutine.
+// Will continue to get readings and update movingAvgs untill stop is set to true.
+// Once stopped, will close chan stopped.
+// Do not call Reset before or Shutdown after.
+// Reset and Shutdown are called for you.
+func (hx711 *Hx711) BackgroundReadMovingAvgs(numReadings, numAvgs int, movingAvgs *[]float64, stop *bool, stopped chan struct{}) {
+	var err error
+	var data int
+	var result float64
+
+	for {
+		err = hx711.Reset()
+		if err == nil {
+			break
+		}
+		log.Print("hx711 BackgroundReadMovingAvgs Reset error:", err)
+		time.Sleep(time.Second)
+	}
+
+	for !*stop {
+		data, err = hx711.readDataMedianRaw(numReadings, stop)
+		if err != nil && err.Error() != "stopped" {
+			log.Print("hx711 BackgroundReadMovingAvgs ReadDataMedian error:", err)
+			continue
+		}
+
+		result = float64(data-hx711.AdjustZero) / hx711.AdjustScale
+		for i := range *movingAvgs {
+			result += (*movingAvgs)[i]
+		}
+		result = result / float64(len(*movingAvgs)+1)
+
+		if len(*movingAvgs) < numAvgs {
+			*movingAvgs = append(*movingAvgs, result)
+			continue
+		}
+		*movingAvgs = append((*movingAvgs)[1:], result)
+	}
+
+	hx711.Shutdown()
+
+	close(stopped)
 }
 
 // GetAdjustValues will help get you the adjust values to plug in later.
