@@ -249,37 +249,39 @@ func (hx711 *Hx711) ReadDataMedianThenAvg(numReadings, numAvgs int) (float64, er
 }
 
 // ReadDataMedianThenMovingAvgs will get median of numReadings raw readings,
-// then will adjust number with AdjustZero and AdjustScale
-// then get the moving avgs.
+// then will adjust number with AdjustZero and AdjustScale. Stores data into previousReadings.
+// Then returns moving average.
 // Do not call Reset before or Shutdown after.
 // Reset and Shutdown are called for you.
-func (hx711 *Hx711) ReadDataMedianThenMovingAvgs(numReadings, numAvgs int, movingAvgs *[]float64) error {
+func (hx711 *Hx711) ReadDataMedianThenMovingAvgs(numReadings, numAvgs int, previousReadings *[]float64) (float64, error) {
 	data, err := hx711.ReadDataMedian(numReadings)
 	if err != nil {
-		return err
+		return 0, err
 	}
+
+	if len(*previousReadings) < numAvgs {
+		*previousReadings = append(*previousReadings, data)
+	} else {
+		*previousReadings = append((*previousReadings)[1:numAvgs], data)
+	}
+
 	var result float64
-	for i := range *movingAvgs {
-		result += (*movingAvgs)[i]
+	for i := range *previousReadings {
+		result += (*previousReadings)[i]
 	}
-	result = (result + float64(data)) / float64(len(*movingAvgs)+1)
-	if len(*movingAvgs) < numAvgs {
-		*movingAvgs = append(*movingAvgs, result)
-		return nil
-	}
-	*movingAvgs = append((*movingAvgs)[1:], result)
-	return nil
+	return result / float64(len(*previousReadings)), nil
 }
 
 // BackgroundReadMovingAvgs it means to run in the background, run as a Goroutine.
-// Will continue to get readings and update movingAvgs untill stop is set to true.
-// Once stopped, will close chan stopped.
+// Will continue to get readings and update movingAvg untill stop is set to true.
+// After it has been stopped, the stopped chan will be closed.
 // Do not call Reset before or Shutdown after.
 // Reset and Shutdown are called for you.
-func (hx711 *Hx711) BackgroundReadMovingAvgs(numReadings, numAvgs int, movingAvgs *[]float64, stop *bool, stopped chan struct{}) {
+func (hx711 *Hx711) BackgroundReadMovingAvgs(numReadings, numAvgs int, movingAvg *float64, stop *bool, stopped chan struct{}) {
 	var err error
 	var data int
 	var result float64
+	previousReadings := make([]float64, 0, numAvgs)
 
 	for {
 		err = hx711.Reset()
@@ -298,16 +300,18 @@ func (hx711 *Hx711) BackgroundReadMovingAvgs(numReadings, numAvgs int, movingAvg
 		}
 
 		result = float64(data-hx711.AdjustZero) / hx711.AdjustScale
-		for i := range *movingAvgs {
-			result += (*movingAvgs)[i]
+		if len(previousReadings) < numAvgs {
+			previousReadings = append(previousReadings, result)
+		} else {
+			previousReadings = append(previousReadings[1:numAvgs], result)
 		}
-		result = result / float64(len(*movingAvgs)+1)
 
-		if len(*movingAvgs) < numAvgs {
-			*movingAvgs = append(*movingAvgs, result)
-			continue
+		result = 0
+		for i := range previousReadings {
+			result += previousReadings[i]
 		}
-		*movingAvgs = append((*movingAvgs)[1:], result)
+
+		*movingAvg = result / float64(len(previousReadings))
 	}
 
 	hx711.Shutdown()

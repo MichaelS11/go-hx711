@@ -166,14 +166,14 @@ func main() {
 The function ReadDataMedianThenMovingAvgs gets the number of reading you pass in, in the below example, 11 readings. Then it finds the median reading, adjusts that number with AdjustZero and AdjustScale. Then it will do a rolling average of the last readings in the weights slice up to the number of averages passed in, which in the below example is 5 averages. 
 
 ```go
-weights := []float64{}
-err = hx711.ReadDataMedianThenMovingAvgs(11, 5, &weights)
+previousReadings := []float64{}
+movingAvg, err := hx711.ReadDataMedianThenMovingAvgs(11, 8, &previousReadings)
 if err != nil {
-	fmt.Println("ReadDataMedianThenAvg error:", err)
+	fmt.Println("ReadDataMedianThenMovingAvgs error:", err)
 }
 
-// get data
-fmt.Println(weights[len(weights)-1])
+// moving average
+fmt.Println(movingAvg)
 ```
 
 ## BackgroundReadMovingAvgs
@@ -181,20 +181,16 @@ fmt.Println(weights[len(weights)-1])
 The function BackgroundReadMovingAvgs is basically the same as ReadDataMedianThenMovingAvgs but runs in the background in a Goroutine. Set stop to true for BackgroundReadMovingAvgs to quit
 
 ```go
-weights := []float64{}
+var movingAvg float64
 stop := false
 stopped = make(chan struct{}, 1)
-go hx711.BackgroundReadMovingAvgs(11, 5, &weights, &stop, stopped)
+go hx711.BackgroundReadMovingAvgs(11, 8, &movingAvg, &stop, stopped)
 
 // wait for data
 time.sleep(time.Second)
 
-if len(weights) < 1 {
-	fmt.Println("weights has no data")
-}
-
-// get data
-fmt.Println(weights[len(weights)-1]) 
+// moving average
+fmt.Println(movingAvg) 
 
 // when done set stop to true to quit BackgroundReadMovingAvgs
 stop = true

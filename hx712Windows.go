@@ -2,6 +2,10 @@
 
 package hx711
 
+import (
+	"time"
+)
+
 // HwioCloseAll closes all opened hwio
 func HwioCloseAll() {
 }
@@ -84,31 +88,28 @@ func (hx711 *Hx711) ReadDataMedianThenAvg(numReadings, numAvgs int) (float64, er
 }
 
 // ReadDataMedianThenMovingAvgs will get median of numReadings raw readings,
-// then will adjust number with AdjustZero and AdjustScale
-// then get the moving avgs.
+// then will adjust number with AdjustZero and AdjustScale. Stores data into previousReadings.
+// Then returns moving average.
 // Do not call Reset before or Shutdown after.
 // Reset and Shutdown are called for you.
-func (hx711 *Hx711) ReadDataMedianThenMovingAvgs(numReadings, numAvgs int, movingAvgs *[]float64) error {
-	if len(*movingAvgs) < numAvgs {
-		*movingAvgs = append(*movingAvgs, 0)
-		return nil
+func (hx711 *Hx711) ReadDataMedianThenMovingAvgs(numReadings, numAvgs int, previousReadings *[]float64) (float64, error) {
+	if len(*previousReadings) < numAvgs {
+		*previousReadings = append(*previousReadings, data)
+	} else {
+		*previousReadings = append((*previousReadings)[1:numAvgs], data)
 	}
-	*movingAvgs = append((*movingAvgs)[1:], 0)
-	return nil
+	return 0, nil
 }
 
 // BackgroundReadMovingAvgs it means to run in the background, run as a Goroutine.
-// Will continue to get readings and update movingAvgs untill stop is set to true.
-// Once stopped, will close chan stopped.
+// Will continue to get readings and update movingAvg untill stop is set to true.
+// After it has been stopped, the stopped chan will be closed.
 // Do not call Reset before or Shutdown after.
 // Reset and Shutdown are called for you.
-func (hx711 *Hx711) BackgroundReadMovingAvgs(numReadings, numAvgs int, movingAvgs *[]float64, stop *bool, stopped chan struct{}) {
+func (hx711 *Hx711) BackgroundReadMovingAvgs(numReadings, numAvgs int, movingAvg *float64, stop *bool, stopped chan struct{}) {
+	*movingAvg = 0
 	for !*stop {
-		if len(*movingAvgs) < numAvgs {
-			*movingAvgs = append(*movingAvgs, 0)
-			continue
-		}
-		*movingAvgs = append((*movingAvgs)[1:], 0)
+		time.Sleep(200 * time.Millisecond)
 	}
 	close(stopped)
 }
