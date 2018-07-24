@@ -38,9 +38,13 @@ import (
 )
 
 func main() {
-	defer hx711.HwioCloseAll()
+	err := hx711.HostInit()
+	if err != nil {
+		fmt.Println("Host Init error:", err)
+		return
+	}
 
-	hx711, err := hx711.NewHx711("gpio6", "gpio5")
+	hx711, err := hx711.NewHx711("GPIO6", "GPIO5")
 	if err != nil {
 		fmt.Println("NewHx711 error:", err)
 		return
@@ -87,9 +91,13 @@ import (
 )
 
 func main() {
-	defer hx711.HwioCloseAll()
+	err := hx711.HostInit()
+	if err != nil {
+		fmt.Println("Host Init error:", err)
+		return
+	}
 
-	hx711, err := hx711.NewHx711("gpio6", "gpio5")
+	hx711, err := hx711.NewHx711("GPIO6", "GPIO5")
 	if err != nil {
 		fmt.Println("NewHx711 error:", err)
 		return
@@ -130,9 +138,13 @@ import (
 )
 
 func main() {
-	defer hx711.HwioCloseAll()
+	err := hx711.HostInit()
+	if err != nil {
+		fmt.Println("Host Init error:", err)
+		return
+	}
 
-	hx711, err := hx711.NewHx711("gpio6", "gpio5")
+	hx711, err := hx711.NewHx711("GPIO6", "GPIO5")
 	if err != nil {
 		fmt.Println("NewHx711 error:", err)
 		return

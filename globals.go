@@ -3,16 +3,14 @@
 package hx711
 
 import (
-	// waiting for pull request to switch to:
-	// "github.com/mrmorphic/hwio"
-	"github.com/MichaelS11/hwio"
+	"periph.io/x/periph/conn/gpio"
 )
 
 // Hx711 struct to interface with the hx711 chip.
 // Call NewHx711 to create a new one.
 type Hx711 struct {
-	clockPin     hwio.Pin
-	dataPin      hwio.Pin
+	clockPin     gpio.PinIO
+	dataPin      gpio.PinIO
 	numEndPulses int
 	// AdjustZero should be set to an int that will zero out a raw reading
 	AdjustZero int

@@ -6,8 +6,9 @@ import (
 	"time"
 )
 
-// HwioCloseAll closes all opened hwio
-func HwioCloseAll() {
+// HostInit calls periph.io host.Init(). This needs to be done before Hx711 can be used.
+func HostInit() error {
+	return nil
 }
 
 // NewHx711 creates new Hx711.
@@ -24,16 +25,9 @@ func NewHx711(clockPinName string, dataPinName string) (*Hx711, error) {
 func (hx711 *Hx711) SetGain(gain int) {
 }
 
-func (hx711 *Hx711) setClockHigh() error {
+// setClockHighThenLow sets clock pin high then low
+func (hx711 *Hx711) setClockHighThenLow() error {
 	return nil
-}
-
-func (hx711 *Hx711) setClockLow() error {
-	return nil
-}
-
-func (hx711 *Hx711) readDataBit() (int, error) {
-	return 0, nil
 }
 
 // Reset starts up or resets the chip.
@@ -48,6 +42,7 @@ func (hx711 *Hx711) Shutdown() error {
 	return nil
 }
 
+// waitForDataReady waits for data to go to low which means chip is ready
 func (hx711 *Hx711) waitForDataReady() error {
 	return nil
 }
@@ -94,9 +89,9 @@ func (hx711 *Hx711) ReadDataMedianThenAvg(numReadings, numAvgs int) (float64, er
 // Reset and Shutdown are called for you.
 func (hx711 *Hx711) ReadDataMedianThenMovingAvgs(numReadings, numAvgs int, previousReadings *[]float64) (float64, error) {
 	if len(*previousReadings) < numAvgs {
-		*previousReadings = append(*previousReadings, data)
+		*previousReadings = append(*previousReadings, 0)
 	} else {
-		*previousReadings = append((*previousReadings)[1:numAvgs], data)
+		*previousReadings = append((*previousReadings)[1:numAvgs], 0)
 	}
 	return 0, nil
 }

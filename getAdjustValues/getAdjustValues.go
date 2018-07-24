@@ -10,16 +10,22 @@ import (
 )
 
 func main() {
-	fmt.Println("Enter clock pin name (press enter for gpio6):")
-	clockPinName := getInput()
-	if clockPinName == "" {
-		clockPinName = "gpio6"
+	err := hx711.HostInit()
+	if err != nil {
+		fmt.Println("Host Init error:", err)
+		return
 	}
 
-	fmt.Println("Enter data pin name (press enter for gpio5):")
+	fmt.Println("Enter clock pin name (press enter for GPIO6):")
+	clockPinName := getInput()
+	if clockPinName == "" {
+		clockPinName = "GPIO6"
+	}
+
+	fmt.Println("Enter data pin name (press enter for GPIO5):")
 	dataPinName := getInput()
 	if dataPinName == "" {
-		dataPinName = "gpio5"
+		dataPinName = "GPIO5"
 	}
 
 	fmt.Println("Enter weight1:")
@@ -45,8 +51,6 @@ func main() {
 		fmt.Println("ParseFloat error:", err)
 		return
 	}
-
-	defer hx711.HwioCloseAll()
 
 	hx711, err := hx711.NewHx711(clockPinName, dataPinName)
 	if err != nil {
