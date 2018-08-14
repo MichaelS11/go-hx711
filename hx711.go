@@ -37,7 +37,7 @@ func NewHx711(clockPinName string, dataPinName string) (*Hx711, error) {
 
 	err := hx711.dataPin.In(gpio.PullUp, gpio.FallingEdge)
 	if err != nil {
-		return nil, fmt.Errorf("dataPin setting to in error:", err)
+		return nil, fmt.Errorf("dataPin setting to in error: %v", err)
 	}
 
 	return hx711, nil
@@ -269,8 +269,9 @@ func (hx711 *Hx711) ReadDataMedianThenMovingAvgs(numReadings, numAvgs int, previ
 }
 
 // BackgroundReadMovingAvgs it means to run in the background, run as a Goroutine.
-// Will continue to get readings and update movingAvg untill stop is set to true.
+// Will continue to get readings and update movingAvg until stop is set to true.
 // After it has been stopped, the stopped chan will be closed.
+// Note when scale errors the movingAvg value will not change.
 // Do not call Reset before or Shutdown after.
 // Reset and Shutdown are called for you.
 func (hx711 *Hx711) BackgroundReadMovingAvgs(numReadings, numAvgs int, movingAvg *float64, stop *bool, stopped chan struct{}) {

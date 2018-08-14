@@ -97,7 +97,7 @@ func (hx711 *Hx711) ReadDataMedianThenMovingAvgs(numReadings, numAvgs int, previ
 }
 
 // BackgroundReadMovingAvgs it means to run in the background, run as a Goroutine.
-// Will continue to get readings and update movingAvg untill stop is set to true.
+// Will continue to get readings and update movingAvg until stop is set to true.
 // After it has been stopped, the stopped chan will be closed.
 // Do not call Reset before or Shutdown after.
 // Reset and Shutdown are called for you.
