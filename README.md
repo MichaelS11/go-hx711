@@ -1,6 +1,6 @@
 # Go HX711 interface
 
-Golang HX711 interface
+Golang HX711 interface using periph.io driver
 
 [![GoDoc Reference](https://godoc.org/github.com/MichaelS11/go-hx711?status.svg)](http://godoc.org/github.com/MichaelS11/go-hx711)
 [![Go Report Card](https://goreportcard.com/badge/github.com/MichaelS11/go-hx711)](https://goreportcard.com/report/github.com/MichaelS11/go-hx711)
