@@ -195,7 +195,7 @@ The function BackgroundReadMovingAvgs is basically the same as ReadDataMedianThe
 ```go
 var movingAvg float64
 stop := false
-stopped = make(chan struct{}, 1)
+stopped = make(chan struct{})
 go hx711.BackgroundReadMovingAvgs(11, 8, &movingAvg, &stop, stopped)
 
 // wait for data
