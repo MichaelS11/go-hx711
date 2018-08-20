@@ -1,5 +1,3 @@
-// +build !windows
-
 package hx711
 
 import (

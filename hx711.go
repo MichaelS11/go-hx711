@@ -35,7 +35,7 @@ func NewHx711(clockPinName string, dataPinName string) (*Hx711, error) {
 		return nil, fmt.Errorf("dataPin is nill")
 	}
 
-	err := hx711.dataPin.In(gpio.PullUp, gpio.FallingEdge)
+	err := hx711.dataPin.In(gpio.PullNoChange, gpio.FallingEdge)
 	if err != nil {
 		return nil, fmt.Errorf("dataPin setting to in error: %v", err)
 	}
@@ -156,9 +156,11 @@ func (hx711 *Hx711) ReadDataRaw() (int, error) {
 		}
 	}
 
-	// if high 23 bit is set, value is negtive
+	// if high 24 bit is set, value is negtive
+	// 100000000000000000000000
 	if (data & 0x800000) > 0 {
-		// flip bits higher than 23 to get negtive number for int
+		// flip bits 24 and lower to get negtive number for int
+		// 111111111111111111111111
 		data |= ^0xffffff
 	}
 
@@ -249,6 +251,7 @@ func (hx711 *Hx711) ReadDataMedianThenAvg(numReadings, numAvgs int) (float64, er
 // Then returns moving average.
 // Do not call Reset before or Shutdown after.
 // Reset and Shutdown are called for you.
+// Will panic if previousReadings is nil
 func (hx711 *Hx711) ReadDataMedianThenMovingAvgs(numReadings, numAvgs int, previousReadings *[]float64) (float64, error) {
 	data, err := hx711.ReadDataMedian(numReadings)
 	if err != nil {
@@ -274,6 +277,7 @@ func (hx711 *Hx711) ReadDataMedianThenMovingAvgs(numReadings, numAvgs int, previ
 // Note when scale errors the movingAvg value will not change.
 // Do not call Reset before or Shutdown after.
 // Reset and Shutdown are called for you.
+// Will panic if movingAvg or stop are nil
 func (hx711 *Hx711) BackgroundReadMovingAvgs(numReadings, numAvgs int, movingAvg *float64, stop *bool, stopped chan struct{}) {
 	var err error
 	var data int
