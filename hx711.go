@@ -8,38 +8,24 @@ import (
 	"sort"
 	"time"
 
-	"periph.io/x/periph/conn/gpio"
-	"periph.io/x/periph/conn/gpio/gpioreg"
-	"periph.io/x/periph/host"
+	"github.com/stianeikeland/go-rpio/v4"
 )
 
-// HostInit calls periph.io host.Init(). This needs to be done before Hx711 can be used.
+var timeoutError = fmt.Errorf("timeout")
+
+// HostInit opens /dev/gpiomem. This needs to be done before Hx711 can be used.
 func HostInit() error {
-	_, err := host.Init()
-	return err
+	return rpio.Open()
 }
 
 // NewHx711 creates new Hx711.
-// Make sure to set clockPinName and dataPinName to the correct pins.
+// Make sure to set clockPin and dataPin to the correct pins.
 // https://cdn.sparkfun.com/datasheets/Sensors/ForceFlex/hx711_english.pdf
-func NewHx711(clockPinName string, dataPinName string) (*Hx711, error) {
+func NewHx711(clockPin int, dataPin int) (*Hx711, error) {
 	hx711 := &Hx711{numEndPulses: 1}
-
-	hx711.clockPin = gpioreg.ByName(clockPinName)
-	if hx711.clockPin == nil {
-		return nil, fmt.Errorf("clockPin is nill")
-	}
-
-	hx711.dataPin = gpioreg.ByName(dataPinName)
-	if hx711.dataPin == nil {
-		return nil, fmt.Errorf("dataPin is nill")
-	}
-
-	err := hx711.dataPin.In(gpio.PullNoChange, gpio.FallingEdge)
-	if err != nil {
-		return nil, fmt.Errorf("dataPin setting to in error: %v", err)
-	}
-
+	hx711.clockPin = rpio.Pin(clockPin)
+	hx711.dataPin = rpio.Pin(dataPin)
+	rpio.PinMode(hx711.dataPin, rpio.Input)
 	return hx711, nil
 }
 
@@ -62,68 +48,51 @@ func (hx711 *Hx711) SetGain(gain int) {
 
 // setClockHighThenLow sets clock pin high then low
 func (hx711 *Hx711) setClockHighThenLow() error {
-	err := hx711.clockPin.Out(gpio.High)
-	if err != nil {
-		return fmt.Errorf("set clock pin to high error: %v", err)
-	}
-	err = hx711.clockPin.Out(gpio.Low)
-	if err != nil {
-		return fmt.Errorf("set clock pin to low error: %v", err)
-	}
+	hx711.clockPin.Write(rpio.High)
+	hx711.clockPin.Write(rpio.Low)
 	return nil
 }
 
 // Reset starts up or resets the chip.
 // The chip needs to be reset if it is not used for just about any amount of time.
 func (hx711 *Hx711) Reset() error {
-	err := hx711.clockPin.Out(gpio.Low)
-	if err != nil {
-		return fmt.Errorf("set clock pin to low error: %v", err)
-	}
-	err = hx711.clockPin.Out(gpio.High)
-	if err != nil {
-		return fmt.Errorf("set clock pin to high error: %v", err)
-	}
+	hx711.clockPin.Write(rpio.Low)
+	hx711.clockPin.Write(rpio.High)
 	time.Sleep(70 * time.Microsecond)
-	err = hx711.clockPin.Out(gpio.Low)
-	if err != nil {
-		return fmt.Errorf("set clock pin to low error: %v", err)
-	}
+	hx711.clockPin.Write(rpio.Low)
 	return nil
 }
 
 // Shutdown puts the chip in powered down mode.
 // The chip should be shutdown if it is not used for just about any amount of time.
 func (hx711 *Hx711) Shutdown() error {
-	err := hx711.clockPin.Out(gpio.High)
-	if err != nil {
-		return fmt.Errorf("set clock pin to high error: %v", err)
-	}
+	hx711.clockPin.Write(rpio.High)
 	return nil
 }
 
 // waitForDataReady waits for data to go to low which means chip is ready
 func (hx711 *Hx711) waitForDataReady() error {
-	err := hx711.clockPin.Out(gpio.Low)
-	if err != nil {
-		return fmt.Errorf("set clock pin to low error: %v", err)
-	}
-
-	var level gpio.Level
+	hx711.clockPin.Write(rpio.Low)
+	var level rpio.State
 
 	// looks like chip often takes 80 to 100 milliseconds to get ready
 	// but somettimes it takes around 500 milliseconds to get ready
 	// WaitForEdge sometimes returns right away
 	// So will loop for 11, which could be more than 1 second, but usually 500 milliseconds
+
+	hx711.dataPin.Detect(rpio.FallEdge)
+	defer hx711.dataPin.Detect(rpio.NoEdge)
 	for i := 0; i < 11; i++ {
 		level = hx711.dataPin.Read()
-		if level == gpio.Low {
+		if level == rpio.Low {
 			return nil
 		}
-		hx711.dataPin.WaitForEdge(100 * time.Millisecond)
+		if !hx711.dataPin.EdgeDetected() {
+			time.Sleep(100 * time.Millisecond)
+		}
 	}
 
-	return fmt.Errorf("timeout")
+	return timeoutError
 }
 
 // ReadDataRaw will get one raw reading from chip.
@@ -134,7 +103,7 @@ func (hx711 *Hx711) ReadDataRaw() (int, error) {
 		return 0, fmt.Errorf("waitForDataReady error: %v", err)
 	}
 
-	var level gpio.Level
+	var level rpio.State
 	var data int
 	for i := 0; i < 24; i++ {
 		err = hx711.setClockHighThenLow()
@@ -144,7 +113,7 @@ func (hx711 *Hx711) ReadDataRaw() (int, error) {
 
 		level = hx711.dataPin.Read()
 		data = data << 1
-		if level == gpio.High {
+		if level == rpio.High {
 			data++
 		}
 	}
