@@ -25,7 +25,8 @@ func NewHx711(clockPin int, dataPin int) (*Hx711, error) {
 	hx711 := &Hx711{numEndPulses: 1}
 	hx711.clockPin = rpio.Pin(clockPin)
 	hx711.dataPin = rpio.Pin(dataPin)
-	rpio.PinMode(hx711.dataPin, rpio.Input)
+	hx711.dataPin.Input()
+	hx711.clockPin.Output()
 	return hx711, nil
 }
 
@@ -72,23 +73,25 @@ func (hx711 *Hx711) Shutdown() error {
 
 // waitForDataReady waits for data to go to low which means chip is ready
 func (hx711 *Hx711) waitForDataReady() error {
-	hx711.clockPin.Write(rpio.Low)
 	var level rpio.State
 
 	// looks like chip often takes 80 to 100 milliseconds to get ready
 	// but somettimes it takes around 500 milliseconds to get ready
 	// WaitForEdge sometimes returns right away
-	// So will loop for 11, which could be more than 1 second, but usually 500 milliseconds
+	// So will loop for N times, which could be more than 1 second, but usually 500 milliseconds
 
 	hx711.dataPin.Detect(rpio.FallEdge)
+	hx711.clockPin.Write(rpio.Low)
 	defer hx711.dataPin.Detect(rpio.NoEdge)
-	for i := 0; i < 11; i++ {
-		level = hx711.dataPin.Read()
-		if level == rpio.Low {
-			return nil
-		}
+	level = hx711.dataPin.Read()
+	if level == rpio.Low {
+		return nil
+	}
+	for i := 0; i < 200000; i++ {
 		if !hx711.dataPin.EdgeDetected() {
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(5 * time.Microsecond)
+		} else {
+			return nil
 		}
 	}
 
