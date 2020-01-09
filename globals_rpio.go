@@ -1,3 +1,5 @@
+// +build rpio
+
 package hx711
 
 import (
