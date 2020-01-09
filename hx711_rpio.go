@@ -16,9 +16,11 @@ func HostInit() error {
 }
 
 // NewHx711 creates new Hx711.
-// Make sure to set clockPin and dataPin to the correct pins.
+// Make sure to set clockPinNum and dataPinNum to the correct pins.
+// The pin numbers must comply with BCM numbering schema.
 // https://cdn.sparkfun.com/datasheets/Sensors/ForceFlex/hx711_english.pdf
-func NewHx711(clockPinStr string, dataPinStr string) (*Hx711, error) {
+// https://godoc.org/github.com/stianeikeland/go-rpio#Pin
+func NewHx711(clockPinNum string, dataPinNum string) (*Hx711, error) {
 	clockPin, err := strconv.ParseInt(clockPinStr, 10, 32)
 	if err != nil {
 		return nil, err
@@ -76,11 +78,10 @@ func (hx711 *Hx711) waitForDataReady() error {
 		return nil
 	}
 	for i := 0; i < 200000; i++ {
-		if !hx711.dataPin.EdgeDetected() {
-			time.Sleep(5 * time.Microsecond)
-		} else {
+		if hx711.dataPin.EdgeDetected() {
 			return nil
 		}
+		time.Sleep(5 * time.Microsecond)
 	}
 
 	return ErrTimeout
