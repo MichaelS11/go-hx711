@@ -24,17 +24,12 @@ go get github.com/MichaelS11/go-hx711
 
 ## Tags
 
-There are 2 possible ways to access GPIO - `sysfs` and `/dev/gpiomem`.
-`sysfs` is more standard way across multiple platforms, yet is has some performance bottlenecks. 
-`/dev/gpiomem` demonstrates better performance for IO operations ( some [benchmarks](https://github.com/warthog618/gpio#benchmarks) ) but is specific to Raspberry PI / Broadcom chip.
+It is possible to use `sysfs` or `/dev/gpiomem` GPIO access. 
 
-`sysfs` is used by [Periph](https://periph.io).
+* `sysfs` is implemented via [Periph](https://periph.io).
+* `/dev/gpiomem` is implemented via [go-rpio](https://github.com/stianeikeland/go-rpio)
 
-While Periph-related bindings work fine on Raspberry Pi 3 ( and probably Raspberry Pi 2 ) - using HX711 chip with Raspberry Pi Zero / Raspberry Pi Zero W is challenging, because the timings are off ( https://github.com/MichaelS11/go-hx711/issues/1 for some information / metrics ).
-
-To separate bindings and not introduce the intermediate API calls, this library supports the tag `rpio` that will use https://github.com/stianeikeland/go-rpio/ library for IO access.
-
-This requires passing `-tags=rpio` to `go build`:
+`sysfs` is enabled by default. To use `/dev/gpiomem` mappings, the tag `rpio` needs to be provided.
 
 ```
 go build -tags=rpio 
@@ -227,3 +222,10 @@ stop = true
 // wait for BackgroundReadMovingAvgs to stop
 <-stopped
 ```
+
+## Performance considerations
+
+`sysfs` is more standard way across multiple platforms, yet is has some performance bottlenecks. 
+`/dev/gpiomem` demonstrates better performance for IO operations ( some [benchmarks](https://github.com/warthog618/gpio#benchmarks) ) but is specific to Raspberry PI / Broadcom chip.
+
+While Periph-related bindings work fine on Raspberry Pi 3 ( and probably Raspberry Pi 2 ) - using HX711 chip with Raspberry Pi Zero / Raspberry Pi Zero W is challenging, because the timings are off ( https://github.com/MichaelS11/go-hx711/issues/1 for some information / metrics ).
