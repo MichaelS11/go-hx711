@@ -78,7 +78,7 @@ func (hx711 *Hx711) waitForDataReady() error {
 		EDGE_TRY_LOOP = 1500
 
 		// delay between reading attempts
-		BUSY_LOOP_DELAY = 250 * time.Millisecond
+		BUSY_LOOP_DELAY = 250 * time.Microsecond
 	)
 	for i := 0; i < EDGE_TRY_LOOP; i++ {
 		if hx711.dataPin.EdgeDetected() {
