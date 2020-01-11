@@ -29,10 +29,10 @@ It is possible to use `sysfs` or `/dev/gpiomem` GPIO access.
 * `sysfs` is implemented via [Periph](https://periph.io).
 * `/dev/gpiomem` is implemented via [go-rpio](https://github.com/stianeikeland/go-rpio)
 
-`sysfs` is enabled by default. To use `/dev/gpiomem` mappings, the tag `rpio` needs to be provided.
+`sysfs` is enabled by default. To use `/dev/gpiomem` mappings, the tag `gpiomem` needs to be provided.
 
 ```
-go build -tags=rpio 
+go build -tags=gpiomem
 ```
 
 ## Simple test to make sure scale is working

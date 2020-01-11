@@ -1,4 +1,4 @@
-// +build rpio
+// +build gpiomem
 
 package hx711
 

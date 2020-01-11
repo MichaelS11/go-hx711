@@ -1,4 +1,4 @@
-// +build !windows,rpio
+// +build !windows,gpiomem
 
 package hx711
 
@@ -20,7 +20,7 @@ func HostInit() error {
 // The pin numbers must comply with BCM numbering schema.
 // https://cdn.sparkfun.com/datasheets/Sensors/ForceFlex/hx711_english.pdf
 // https://godoc.org/github.com/stianeikeland/go-rpio#Pin
-func NewHx711(clockPinNum string, dataPinNum string) (*Hx711, error) {
+func NewHx711(clockPinStr string, dataPinStr string) (*Hx711, error) {
 	clockPin, err := strconv.ParseInt(clockPinStr, 10, 32)
 	if err != nil {
 		return nil, err
@@ -65,11 +65,6 @@ func (hx711 *Hx711) Shutdown() error {
 func (hx711 *Hx711) waitForDataReady() error {
 	var level rpio.State
 
-	// looks like chip often takes 80 to 100 milliseconds to get ready
-	// but somettimes it takes around 500 milliseconds to get ready
-	// WaitForEdge sometimes returns right away
-	// So will loop for N times, which could be more than 1 second, but usually 500 milliseconds
-
 	hx711.dataPin.Detect(rpio.FallEdge)
 	hx711.clockPin.Write(rpio.Low)
 	defer hx711.dataPin.Detect(rpio.NoEdge)
@@ -77,11 +72,15 @@ func (hx711 *Hx711) waitForDataReady() error {
 	if level == rpio.Low {
 		return nil
 	}
-	for i := 0; i < 200000; i++ {
+	// looks like chip often takes 80 to 100 milliseconds to get ready
+	// but somettimes it takes around 500 milliseconds to get ready
+	// WaitForEdge sometimes returns right away
+	// So will loop for N times, which could be more than 1 second, but usually 500 milliseconds
+	for i := 0; i < 11; i++ {
 		if hx711.dataPin.EdgeDetected() {
 			return nil
 		}
-		time.Sleep(5 * time.Microsecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	return ErrTimeout

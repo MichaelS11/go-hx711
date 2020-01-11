@@ -1,4 +1,4 @@
-// +build !windows,!rpio
+// +build !windows,!gpiomem
 
 package hx711
 
