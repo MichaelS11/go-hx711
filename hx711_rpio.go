@@ -72,15 +72,19 @@ func (hx711 *Hx711) waitForDataReady() error {
 	if level == rpio.Low {
 		return nil
 	}
-	// looks like chip often takes 80 to 100 milliseconds to get ready
-	// but somettimes it takes around 500 milliseconds to get ready
-	// WaitForEdge sometimes returns right away
-	// So will loop for N times, which could be more than 1 second, but usually 500 milliseconds
-	for i := 0; i < 11; i++ {
+	const (
+		// since there's no way to intercept the edge without using sysfs and epoll, we need to
+		// read the GPIO memory bit multiple times until the edge presence is detected.
+		EDGE_TRY_LOOP = 1500
+
+		// delay between reading attempts
+		BUSY_LOOP_DELAY = 250 * time.Millisecond
+	)
+	for i := 0; i < EDGE_TRY_LOOP; i++ {
 		if hx711.dataPin.EdgeDetected() {
 			return nil
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(BUSY_LOOP_DELAY)
 	}
 
 	return ErrTimeout
