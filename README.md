@@ -22,6 +22,18 @@ Side note, in my testing using 3V input had better consistency then using a 5V i
 
 go get github.com/MichaelS11/go-hx711
 
+## Tags
+
+It is possible to use `sysfs` or `/dev/gpiomem` GPIO access. 
+
+* `sysfs` is implemented via [Periph](https://periph.io).
+* `/dev/gpiomem` is implemented via [go-rpio](https://github.com/stianeikeland/go-rpio)
+
+`sysfs` is enabled by default. To use `/dev/gpiomem` mappings, the tag `gpiomem` needs to be provided.
+
+```
+go build -tags=gpiomem
+```
 
 ## Simple test to make sure scale is working
 
@@ -210,3 +222,10 @@ stop = true
 // wait for BackgroundReadMovingAvgs to stop
 <-stopped
 ```
+
+## Performance considerations
+
+`sysfs` is more standard way across multiple platforms, yet is has some performance bottlenecks. 
+`/dev/gpiomem` demonstrates better performance for IO operations ( some [benchmarks](https://github.com/warthog618/gpio#benchmarks) ) but is specific to Raspberry PI / Broadcom chip.
+
+While Periph-related bindings work fine on Raspberry Pi 3 ( and probably Raspberry Pi 2 ) - using HX711 chip with Raspberry Pi Zero / Raspberry Pi Zero W is challenging, because the timings are off ( https://github.com/MichaelS11/go-hx711/issues/1 for some information / metrics ).
