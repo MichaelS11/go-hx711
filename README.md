@@ -20,7 +20,7 @@ Side note, in my testing using 3V input had better consistency then using a 5V i
 
 ## Get
 
-go get github.com/MichaelS11/go-hx711
+`go get github.com/MichaelS11/go-hx711`
 
 ## Tags
 
